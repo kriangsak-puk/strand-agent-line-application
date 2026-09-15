@@ -1,0 +1,11 @@
+.venv
+.git
+.env
+.run
+__pycache__
+*.pyc
+demo.py
+main.py
+PLAN.md
+CLAUDE.md
+README.md

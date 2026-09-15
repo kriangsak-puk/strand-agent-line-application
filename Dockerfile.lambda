@@ -1,0 +1,19 @@
+# Lambda container image for the LINE webhook adapter (adapter/app.py via
+# lambda_handler.py + Mangum). Separate from Dockerfile, which packages
+# agentcore_app.py for Bedrock AgentCore Runtime instead — different run
+# model (Lambda Runtime API vs. a long-running HTTP server on :8080).
+FROM --platform=linux/arm64 public.ecr.aws/lambda/python:3.14
+
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
+RUN pip install -r requirements.txt --target "${LAMBDA_TASK_ROOT}" --no-cache-dir
+
+COPY agent/ ${LAMBDA_TASK_ROOT}/agent/
+COPY adapter/ ${LAMBDA_TASK_ROOT}/adapter/
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
+
+# Lambda runs as a non-root user; COPY preserves host file permissions,
+# so a restrictively-permissioned source file (e.g. 600) would otherwise
+# be unreadable at runtime. Force world-readable regardless of host state.
+RUN chmod -R a+rX "${LAMBDA_TASK_ROOT}"
+
+CMD ["lambda_handler.handler"]
